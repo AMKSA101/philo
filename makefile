@@ -5,13 +5,13 @@ OBJ = $(SRC:%.c=$(OBJ_DIR)/%.o)
 NAME = philo
 CCF = cc -Wall -Wextra -Werror -g
 RM = rm -f
-$(NAME): $(OBJ) $(INCLUDES)
-	@$(CC) $(OBJ) -o $(NAME)
+$(NAME): $(OBJ)
+	@$(CCF) $(OBJ) -o $(NAME)
 	@echo "Compilation successful! Executable $(NAME) created."
 all: $(NAME)
-$(OBJ_DIR)/%.o: %.c
+$(OBJ_DIR)/%.o: %.c $(INCLUDES)
 	@mkdir -p $(OBJ_DIR)
-	@$(CC) -c $< -o $@
+	@$(CCF) -c $< -o $@
 clean:
 	@$(RM) $(OBJ)
 fclean: clean
