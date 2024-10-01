@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:07 by abamksa           #+#    #+#             */
-/*   Updated: 2024/09/29 10:34:51 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/10/01 09:09:23 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ typedef struct		s_data
 	int				num_of_eat;
 	int				philo_dead;
 	long			start_time;
+	pthread_mutex_t	death_check;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t	print;
 	pthread_mutex_t	dead;

@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:02 by abamksa           #+#    #+#             */
-/*   Updated: 2024/09/29 10:40:37 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/10/01 09:27:59 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,20 @@ int		ft_atoi(const char *nptr)
 void	print_status(t_philo *philo, char *status)
 {
 	pthread_mutex_lock(&philo->data->print);
-	printf("%ld %d %s\n", get_time() - philo->data->start_time, philo->id, status);
+	if(!philo->data->philo_dead)
+		printf("%ld %d %s\n", get_time() - philo->data->start_time, philo->id, status);
 	pthread_mutex_unlock(&philo->data->print);
+}
+
+void	check_death(t_philo *philo)
+{
+	pthread_mutex_lock(&philo->data->death_check);
+	if (get_time() - philo->last_eat > philo->data->time_to_die)
+	{
+		print_status(philo, "died");
+		philo->data->philo_dead = 1;
+	}
+	pthread_mutex_unlock(&philo->data->death_check);
 }
 
 void	*routine(void *arg)
@@ -64,36 +76,21 @@ void	*routine(void *arg)
 	philo = (t_philo *)arg;
 	if (philo->id % 2 == 0)
 		usleep(100);
-	while (1)
+	while (!philo->data->philo_dead)
 	{
-		if (philo->id % 2 == 0)
-		{
-			pthread_mutex_lock(&philo->data->forks[(philo->id) % philo->data->num_of_philo]);
-			print_status(philo, "has taken a fork (right)");
-			pthread_mutex_lock(&philo->data->forks[philo->id - 1]);
-			print_status(philo, "has taken a fork (left)");
-		}
-		else
-		{
-			pthread_mutex_lock(&philo->data->forks[philo->id - 1]);
-			print_status(philo, "has taken a fork (left)");
-			pthread_mutex_lock(&philo->data->forks[(philo->id) % philo->data->num_of_philo]);
-			print_status(philo, "has taken a fork (right)");
-		}
+		pthread_mutex_lock(&philo->data->forks[philo->left_fork]);
+		print_status(philo, "has taken a fork (left)");
+		pthread_mutex_lock(&philo->data->forks[philo->right_fork]);
+		print_status(philo, "has taken a fork (right)");
 		print_status(philo, "is eating");
 		philo->last_eat = get_time();
 		usleep(philo->data->time_to_eat * 1000);
-		pthread_mutex_unlock(&philo->data->forks[philo->id - 1]);
-		pthread_mutex_unlock(&philo->data->forks[(philo->id) % philo->data->num_of_philo]);
+		pthread_mutex_unlock(&philo->data->forks[philo->right_fork]);
+		pthread_mutex_unlock(&philo->data->forks[philo->left_fork]);
 		print_status(philo, "is sleeping");
 		usleep(philo->data->time_to_sleep * 1000);
 		print_status(philo, "is thinking");
-		if (philo->data->num_of_eat != -1)
-		{
-			philo->data->num_of_eat++;
-			if (philo->data->num_of_eat == philo->data->num_of_philo)
-				break;
-		}
+		check_death(philo);
 	}
 	return (NULL);
 }
@@ -102,35 +99,36 @@ void	*routine(void *arg)
 int		init_philo(t_data *data)
 {
 	int		i;
-	t_philo	*philo;
+	t_philo	*philos;
 
 	i = 0;
-	philo = (t_philo *)malloc(sizeof(t_philo) * data->num_of_philo);
-	if (!philo)
+	philos = (t_philo *)malloc(sizeof(t_philo) * data->num_of_philo);
+	if (!philos)
 		return (-1);
 	while (i < data->num_of_philo)
 	{
-		philo[i].id = i + 1;
-		philo[i].data = data;
-		philo[i].last_eat = get_time();
-		philo[i].data->num_of_eat = 0;
+		philos[i].id = i + 1;
+		philos[i].left_fork = i;
+		philos[i].right_fork = (i + 1) % data->num_of_philo;
+		philos[i].last_eat = get_time();
+		philos[i].data = data;
 		i++;
 	}
 	i = 0;
 	while (i < data->num_of_philo)
 	{
-		if (pthread_create(&philo[i].thread, NULL, routine, &philo[i]) != 0)
+		if (pthread_create(&philos[i].thread, NULL, routine, &philos[i]) != 0)
 			return (-1);
 		i++;
 	}
 	i = 0;
 	while (i < data->num_of_philo)
 	{
-		if (pthread_join(philo[i].thread, NULL) != 0)
+		if (pthread_join(philos[i].thread, NULL) != 0)
 			return (-1);
 		i++;
 	}
-	free(philo);
+	free(philos);
 	return (0);
 }
 
@@ -138,6 +136,9 @@ int		init_philo(t_data *data)
 int		main(int ac, char **av)
 {
 	t_data	*data;
+	int		i;
+
+	i = 0;
 	if (check_args(++av) == -1)
 		return (1);
 	if (ac < 5 || ac > 6)
@@ -160,10 +161,37 @@ int		main(int ac, char **av)
 	else
 		data->num_of_eat = -1;
 	data->start_time = get_time();
+	data->philo_dead = 0;
+	data->forks = malloc(sizeof(pthread_mutex_t) * data->num_of_philo);
+	if (!data->forks)
+	{
+		free(data);
+		printf("Error: Malloc failed for forks\n");
+		return (1);
+	}
+	while (i < data->num_of_philo)
+	{
+		if (pthread_mutex_init(&data->forks[i], NULL) != 0)
+		{
+			printf("Error: Mutex initialization failed for fork %d\n", i);
+			return (1);
+		}
+		i++;
+	}
+	pthread_mutex_init(&data->print, NULL);
+	pthread_mutex_init(&data->death_check, NULL);
 	if (init_philo(data) == -1)
 	{
 		printf("Error: Malloc failed\n");
 		return (1);
 	}
+	i = 0;
+	while (i < data->num_of_philo)
+	{
+		pthread_mutex_destroy(&data->forks[i]);
+		i++;
+	}
+	pthread_mutex_destroy(&data->print);
+	pthread_mutex_destroy(&data->death_check);
 	return (0);
 }
