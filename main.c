@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:02 by abamksa           #+#    #+#             */
-/*   Updated: 2024/10/01 09:27:59 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/10/06 11:08:00 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ void	*routine(void *arg)
 
 	philo = (t_philo *)arg;
 	if (philo->id % 2 == 0)
-		usleep(100);
+		ft_usleep(100);
 	while (!philo->data->philo_dead)
 	{
 		pthread_mutex_lock(&philo->data->forks[philo->left_fork]);
@@ -84,11 +84,11 @@ void	*routine(void *arg)
 		print_status(philo, "has taken a fork (right)");
 		print_status(philo, "is eating");
 		philo->last_eat = get_time();
-		usleep(philo->data->time_to_eat * 1000);
+		ft_usleep(philo->data->time_to_eat * 1000);
 		pthread_mutex_unlock(&philo->data->forks[philo->right_fork]);
 		pthread_mutex_unlock(&philo->data->forks[philo->left_fork]);
 		print_status(philo, "is sleeping");
-		usleep(philo->data->time_to_sleep * 1000);
+		ft_usleep(philo->data->time_to_sleep * 1000);
 		print_status(philo, "is thinking");
 		check_death(philo);
 	}
