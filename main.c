@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:02 by abamksa           #+#    #+#             */
-/*   Updated: 2024/10/01 09:27:59 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/10/07 08:55:27 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,14 @@ void	*routine(void *arg)
 		usleep(100);
 	while (!philo->data->philo_dead)
 	{
+		if (philo->data->num_of_philo == 1)
+		{
+			print_status(philo, "has taken a fork (left)");
+			usleep(philo->data->time_to_die * 1000);
+			print_status(philo, "died");
+			philo->data->philo_dead = 1;
+			break ;
+		}
 		pthread_mutex_lock(&philo->data->forks[philo->left_fork]);
 		print_status(philo, "has taken a fork (left)");
 		pthread_mutex_lock(&philo->data->forks[philo->right_fork]);
@@ -85,6 +93,12 @@ void	*routine(void *arg)
 		print_status(philo, "is eating");
 		philo->last_eat = get_time();
 		usleep(philo->data->time_to_eat * 1000);
+		philo->eat_count++;
+		pthread_mutex_lock(&philo->data->meals_check);
+		philo->data->total_meals++;
+		if (philo->data->num_of_eat != -1 && philo->data->total_meals >= philo->data->num_of_philo * philo->data->num_of_eat)
+			philo->data->philo_dead = 1;
+		pthread_mutex_unlock(&philo->data->meals_check);
 		pthread_mutex_unlock(&philo->data->forks[philo->right_fork]);
 		pthread_mutex_unlock(&philo->data->forks[philo->left_fork]);
 		print_status(philo, "is sleeping");
@@ -111,6 +125,7 @@ int		init_philo(t_data *data)
 		philos[i].left_fork = i;
 		philos[i].right_fork = (i + 1) % data->num_of_philo;
 		philos[i].last_eat = get_time();
+		philos[i].eat_count = 0;
 		philos[i].data = data;
 		i++;
 	}
@@ -162,6 +177,7 @@ int		main(int ac, char **av)
 		data->num_of_eat = -1;
 	data->start_time = get_time();
 	data->philo_dead = 0;
+	data->total_meals = 0;
 	data->forks = malloc(sizeof(pthread_mutex_t) * data->num_of_philo);
 	if (!data->forks)
 	{
@@ -180,6 +196,7 @@ int		main(int ac, char **av)
 	}
 	pthread_mutex_init(&data->print, NULL);
 	pthread_mutex_init(&data->death_check, NULL);
+	pthread_mutex_init(&data->meals_check, NULL);
 	if (init_philo(data) == -1)
 	{
 		printf("Error: Malloc failed\n");
