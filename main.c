@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:02 by abamksa           #+#    #+#             */
-/*   Updated: 2024/10/07 08:55:27 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/10/07 10:54:38 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -210,5 +210,7 @@ int		main(int ac, char **av)
 	}
 	pthread_mutex_destroy(&data->print);
 	pthread_mutex_destroy(&data->death_check);
+	free(data->forks);
+	free(data);
 	return (0);
 }
