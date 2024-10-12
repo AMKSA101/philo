@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:02 by abamksa           #+#    #+#             */
-/*   Updated: 2024/10/07 10:54:38 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/10/12 10:29:08 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,11 +94,15 @@ void	*routine(void *arg)
 		philo->last_eat = get_time();
 		usleep(philo->data->time_to_eat * 1000);
 		philo->eat_count++;
-		pthread_mutex_lock(&philo->data->meals_check);
-		philo->data->total_meals++;
-		if (philo->data->num_of_eat != -1 && philo->data->total_meals >= philo->data->num_of_philo * philo->data->num_of_eat)
-			philo->data->philo_dead = 1;
-		pthread_mutex_unlock(&philo->data->meals_check);
+		if (philo->data->num_of_eat != -1 && philo->eat_count >= philo->data->num_of_eat)
+		{
+			pthread_mutex_lock(&philo->data->meals_check);
+			philo->data->finished_philos++;
+			if (philo->data->finished_philos == philo->data->num_of_philo)
+				philo->data->total_meals = 1;
+			pthread_mutex_unlock(&philo->data->meals_check);
+			break ;
+		}
 		pthread_mutex_unlock(&philo->data->forks[philo->right_fork]);
 		pthread_mutex_unlock(&philo->data->forks[philo->left_fork]);
 		print_status(philo, "is sleeping");
@@ -178,6 +182,7 @@ int		main(int ac, char **av)
 	data->start_time = get_time();
 	data->philo_dead = 0;
 	data->total_meals = 0;
+	data->finished_philos = 0;
 	data->forks = malloc(sizeof(pthread_mutex_t) * data->num_of_philo);
 	if (!data->forks)
 	{
