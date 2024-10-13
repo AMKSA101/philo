@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:02 by abamksa           #+#    #+#             */
-/*   Updated: 2024/10/12 10:29:08 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/10/13 12:31:38 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ void	print_status(t_philo *philo, char *status)
 void	check_death(t_philo *philo)
 {
 	pthread_mutex_lock(&philo->data->death_check);
-	if (get_time() - philo->last_eat > philo->data->time_to_die)
+	if ((get_time() - philo->last_eat) > philo->data->time_to_die - 10 && !philo->data->philo_dead)
 	{
 		print_status(philo, "died");
 		philo->data->philo_dead = 1;
@@ -83,7 +83,9 @@ void	*routine(void *arg)
 			print_status(philo, "has taken a fork (left)");
 			usleep(philo->data->time_to_die * 1000);
 			print_status(philo, "died");
+			pthread_mutex_lock(&philo->data->death_check);
 			philo->data->philo_dead = 1;
+			pthread_mutex_unlock(&philo->data->death_check);
 			break ;
 		}
 		pthread_mutex_lock(&philo->data->forks[philo->left_fork]);
