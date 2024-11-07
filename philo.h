@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:07 by abamksa           #+#    #+#             */
-/*   Updated: 2024/10/12 10:24:44 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/11/07 11:46:09 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ typedef struct		s_philo
 	int				eat_count;
 	long			last_eat;
 	pthread_t		thread;
+	pthread_t		monitor_thread;
 	t_data			*data;
 }					t_philo;
 

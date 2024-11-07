@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:22:04 by abamksa           #+#    #+#             */
-/*   Updated: 2024/09/25 09:53:52 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/11/07 11:45:21 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,7 @@ void	print_error(void)
 int	scanit(const char *nptr)
 {
 	long	res;
-	int		i;
 
-	i = 0;
 	res = 0;
 	while ((*nptr >= '\t' && *nptr <= '\r') || (*nptr == ' '))
 	{
