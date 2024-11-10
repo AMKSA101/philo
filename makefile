@@ -3,7 +3,7 @@ SRC = check_args.c main.c
 OBJ_DIR = obj
 OBJ = $(SRC:%.c=$(OBJ_DIR)/%.o)
 NAME = philo
-CCF = cc -Wall -Wextra -Werror -g
+CCF = cc -Wall -Wextra -Werror -g -fsanitize=thread
 RM = rm -f
 $(NAME): $(OBJ)
 	@$(CCF) $(OBJ) -o $(NAME)

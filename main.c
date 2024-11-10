@@ -6,9 +6,10 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:02 by abamksa           #+#    #+#             */
-/*   Updated: 2024/11/07 18:16:52 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/11/10 10:03:20 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #include "philo.h"
 
@@ -84,8 +85,16 @@ void	*routine(void *arg)
 	philo = (t_philo *)arg;
 	if (philo->id % 2 == 0)
 		usleep(100);
-	while (!philo->data->philo_dead)
+	while (1)
 	{
+		pthread_mutex_lock(&philo->data->death_check);
+		if (philo->data->philo_dead)
+		{
+			pthread_mutex_unlock(&philo->data->death_check);
+			break ;
+		}
+		pthread_mutex_unlock(&philo->data->death_check);
+
 		if (philo->data->num_of_philo == 1)
 		{
 			print_status(philo, "has taken a fork (left)");
@@ -101,7 +110,9 @@ void	*routine(void *arg)
 		pthread_mutex_lock(&philo->data->forks[philo->right_fork]);
 		print_status(philo, "has taken a fork (right)");
 		print_status(philo, "is eating");
+		pthread_mutex_lock(&philo->data->death_check);
 		philo->last_eat = get_time();
+		pthread_mutex_unlock(&philo->data->death_check);
 		ft_usleep(philo->data->time_to_eat);
 		philo->eat_count++;
 		if (philo->data->num_of_eat != -1 && philo->eat_count >= philo->data->num_of_eat)
@@ -111,8 +122,12 @@ void	*routine(void *arg)
 			pthread_mutex_lock(&philo->data->meals_check);
 			philo->data->finished_philos++;
 			if (philo->data->finished_philos == philo->data->num_of_philo)
+			{
 				philo->data->total_meals = 1;
-			pthread_mutex_unlock(&philo->data->meals_check);
+				pthread_mutex_unlock(&philo->data->meals_check);
+			}
+			else
+				pthread_mutex_unlock(&philo->data->meals_check);
 			break ;
 		}
 		pthread_mutex_unlock(&philo->data->forks[philo->right_fork]);
@@ -130,8 +145,16 @@ void	*monitor(void *arg)
 	t_data	*data = philos[0].data;
 	int		i;
 
-	while (!data->philo_dead && data->finished_philos < data->num_of_philo)
+	while (1)
 	{
+		pthread_mutex_lock(&data->death_check);
+		if (data->philo_dead || data->finished_philos >= data->num_of_philo)
+		{
+			pthread_mutex_unlock(&data->death_check);
+			break ;
+		}
+		pthread_mutex_unlock(&data->death_check);
+
 		i = 0;
 		while (i < data->num_of_philo)
 		{
