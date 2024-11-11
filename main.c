@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:23:02 by abamksa           #+#    #+#             */
-/*   Updated: 2024/11/10 10:03:20 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/11/11 09:51:54 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,9 +97,12 @@ void	*routine(void *arg)
 
 		if (philo->data->num_of_philo == 1)
 		{
+			pthread_mutex_lock(&philo->data->forks[philo->left_fork]);
 			print_status(philo, "has taken a fork (left)");
 			usleep(philo->data->time_to_die * 1000);
+			pthread_mutex_lock(&philo->data->meals_check);
 			print_status(philo, "died");
+			pthread_mutex_unlock(&philo->data->meals_check);
 			pthread_mutex_lock(&philo->data->death_check);
 			philo->data->philo_dead = 1;
 			pthread_mutex_unlock(&philo->data->death_check);
@@ -126,15 +129,18 @@ void	*routine(void *arg)
 				philo->data->total_meals = 1;
 				pthread_mutex_unlock(&philo->data->meals_check);
 			}
-			else
-				pthread_mutex_unlock(&philo->data->meals_check);
+			pthread_mutex_unlock(&philo->data->meals_check);
 			break ;
 		}
 		pthread_mutex_unlock(&philo->data->forks[philo->right_fork]);
 		pthread_mutex_unlock(&philo->data->forks[philo->left_fork]);
+		pthread_mutex_lock(&philo->data->meals_check);
 		print_status(philo, "is sleeping");
+		pthread_mutex_unlock(&philo->data->meals_check);
 		ft_usleep(philo->data->time_to_sleep);
+		pthread_mutex_lock(&philo->data->meals_check);
 		print_status(philo, "is thinking");
+		pthread_mutex_unlock(&philo->data->meals_check);
 	}
 	return (NULL);
 }
@@ -147,6 +153,7 @@ void	*monitor(void *arg)
 
 	while (1)
 	{
+		pthread_mutex_lock(&data->meals_check);
 		pthread_mutex_lock(&data->death_check);
 		if (data->philo_dead || data->finished_philos >= data->num_of_philo)
 		{
@@ -154,15 +161,22 @@ void	*monitor(void *arg)
 			break ;
 		}
 		pthread_mutex_unlock(&data->death_check);
-
+		if (data->total_meals)
+		{
+			pthread_mutex_unlock(&data->meals_check);
+			break ;
+		}
+		pthread_mutex_unlock(&data->meals_check);
 		i = 0;
 		while (i < data->num_of_philo)
 		{
 			pthread_mutex_lock(&data->death_check);
 			if (get_time() - philos[i].last_eat > data->time_to_die)
 			{
+				pthread_mutex_lock(&data->meals_check);
 				print_status(&philos[i], "died");
 				data->philo_dead = 1;
+				pthread_mutex_unlock(&data->meals_check);
 				pthread_mutex_unlock(&data->death_check);
 				return (NULL);
 			}
