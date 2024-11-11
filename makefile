@@ -1,5 +1,5 @@
 INCLUDES = philo.h
-SRC = check_args.c main.c
+SRC = check_args.c main.c data.c philos.c utils.c routine_utils.c
 OBJ_DIR = obj
 OBJ = $(SRC:%.c=$(OBJ_DIR)/%.o)
 NAME = philo
@@ -18,4 +18,4 @@ fclean: clean
 	@$(RM) $(NAME)
 re: fclean all
 .PHONY: all clean fclean re
-.SECONDARY: $(OBJ)
+.SECONDARY:

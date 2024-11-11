@@ -6,7 +6,7 @@
 /*   By: abamksa <abamksa@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/14 09:22:04 by abamksa           #+#    #+#             */
-/*   Updated: 2024/11/07 11:45:21 by abamksa          ###   ########.fr       */
+/*   Updated: 2024/11/11 11:58:45 by abamksa          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ int	scanit(const char *nptr)
 	{
 		++nptr;
 		if (*nptr == '\0')
-			return(-1);
+			return (-1);
 	}
 	while (*nptr >= '0' && *nptr <= '9')
 	{
@@ -41,17 +41,13 @@ int	scanit(const char *nptr)
 	while ((*nptr >= '\t' && *nptr <= '\r') || (*nptr == ' '))
 		++nptr;
 	if ((*nptr > 31 && *nptr < 127))
-	{
-		print_error();
-		return (-1);
-	}
+		return (print_error(), -1);
 	return (res);
-
 }
 
 int	check_args(char **av)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	while (av[i])
